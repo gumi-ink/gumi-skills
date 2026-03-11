@@ -1,0 +1,16 @@
+{
+  "name": "safe-edit",
+  "version": "1.0.0",
+  "description": "Prevent silent edit failures with automatic fallback strategies",
+  "author": "Gumi (@gumi-ink)",
+  "license": "MIT",
+  "bin": {
+    "safeedit": "./safeedit.sh"
+  },
+  "config": {
+    "onFailure": "alert",
+    "backupDir": "./backups",
+    "verifyWrites": true,
+    "logLevel": "warn"
+  }
+}

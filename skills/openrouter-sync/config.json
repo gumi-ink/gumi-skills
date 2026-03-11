@@ -1,0 +1,13 @@
+{
+  "apiKeyFile": "~/.openclaw/openrouter.key",
+  "logFile": "~/.openclaw/logs/openrouter-sync.log",
+  "backupConfigs": true,
+  "alertOnChange": true,
+  "alertChannel": "feishu",
+  "preferredModels": [
+    "google/gemma-3-27b-it:free",
+    "meta-llama/llama-3.3-70b-instruct:free",
+    "nousresearch/hermes-3-llama-3.1-405b:free",
+    "mistralai/mistral-small-3.1-24b-instruct:free"
+  ]
+}
