@@ -26,20 +26,21 @@ This skill provides a robust wrapper around file edits with:
 3. **Post-verification** - Confirm changes were applied
 4. **Alert on failure** - Never fail silently
 
-## Usage
-
-```bash
-# Use safeedit wrapper
-safeedit --file path/to/file --old "old text" --new "new text"
-
-# With verbose output
-safeedit --file path/to/file --old "old text" --new "new text" --verbose
-```
-
 ## Installation
 
 ```bash
-clawhub install safe-edit
+git clone https://github.com/gumi-ink/gumi-skills.git
+cp -r gumi-skills/skills/safe-edit ~/.openclaw/workspace/skills/
+chmod +x ~/.openclaw/workspace/skills/safe-edit/safeedit.sh
+```
+
+## Usage
+
+```bash
+~/.openclaw/workspace/skills/safe-edit/safeedit.sh \
+  --file path/to/file \
+  --old "old text" \
+  --new "new text"
 ```
 
 ## Rules

@@ -25,11 +25,13 @@ Every day at 06:00:
 ## Installation
 
 ```bash
-# Clone and install
+# Clone the skills repository
 git clone https://github.com/gumi-ink/gumi-skills.git
-cd gumi-skills/skills/openrouter-sync
 
-# Set up API key
+# Copy skill to your OpenClaw workspace
+cp -r gumi-skills/skills/openrouter-sync ~/.openclaw/workspace/skills/
+
+# Set up your OpenRouter API key
 echo "sk-or-v1-xxxxxxxx" > ~/.openclaw/openrouter.key
 chmod 600 ~/.openclaw/openrouter.key
 
@@ -40,24 +42,6 @@ openclaw cron create \
   --description "Sync OpenRouter free models" \
   --message "Run openrouter-sync" \
   --agent main
-```
-
-## Configuration
-
-Edit `~/.openclaw/workspace/skills/openrouter-sync/config.json`:
-
-```json
-{
-  "apiKeyFile": "~/.openclaw/openrouter.key",
-  "logFile": "~/.openclaw/logs/openrouter-sync.log",
-  "backupConfigs": true,
-  "alertOnChange": true,
-  "alertChannel": "feishu",
-  "preferredModels": [
-    "google/gemma-3-27b-it:free",
-    "meta-llama/llama-3.3-70b-instruct:free"
-  ]
-}
 ```
 
 ## Usage
@@ -72,11 +56,6 @@ Edit `~/.openclaw/workspace/skills/openrouter-sync/config.json`:
 tail ~/.openclaw/logs/openrouter-sync.log
 ```
 
-### Force update
-```bash
-~/.openclaw/workspace/skills/openrouter-sync/sync.sh --force
-```
-
 ## Log Format
 
 ```
@@ -88,44 +67,6 @@ tail ~/.openclaw/logs/openrouter-sync.log
 [2026-03-11 06:00:03] Config updated successfully
 [2026-03-11 06:00:03] Verified 47 openrouter models in list
 [2026-03-11 06:00:03] Sync completed
-```
-
-## Alert Triggers
-
-Get notified when:
-- New free model added (opportunity)
-- Free model removed (need to migrate)
-- API key invalid (action needed)
-- Sync fails 3 times in a row (system issue)
-
-## Model Selection Strategy
-
-The sync maintains a priority list:
-
-```
-Tier 1 (High Priority):
-- google/gemma-3-27b-it:free
-- meta-llama/llama-3.3-70b-instruct:free
-- nousresearch/hermes-3-llama-3.1-405b:free
-
-Tier 2 (Medium Priority):
-- mistralai/mistral-small-3.1-24b-instruct:free
-- google/gemma-3-12b-it:free
-
-Tier 3 (Backup):
-- qwen/qwen3-4b:free
-- google/gemma-3-4b-it:free
-```
-
-## Integration with safe-edit
-
-Uses safe-edit internally to prevent config corruption:
-```bash
-# If config update fails, safe-edit will:
-# 1. Try exact match edit
-# 2. Fall back to append
-# 3. Create backup file
-# 4. Alert user
 ```
 
 ## Troubleshooting
@@ -150,9 +91,6 @@ openclaw config get models.providers.openrouter
 ```bash
 # List all cron jobs
 openclaw cron list
-
-# Check job logs
-openclaw cron logs openrouter-sync
 ```
 
 ## Architecture
@@ -169,20 +107,13 @@ openclaw cron logs openrouter-sync
 └─────────────┬───────────────────────────┘
               ▼
 ┌─────────────────────────────────────────┐
-│  Compare with current config            │
-│  ├─ No change → Log and exit            │
-│  └─ Changes   → Proceed                 │
-└─────────────┬───────────────────────────┘
-              ▼
-┌─────────────────────────────────────────┐
 │  Backup current config                  │
-│  Update with safe-edit                  │
+│  Update with openclaw CLI               │
 │  Verify models accessible               │
 └─────────────┬───────────────────────────┘
               ▼
 ┌─────────────────────────────────────────┐
 │  Log results                            │
-│  Alert if significant changes           │
 └─────────────────────────────────────────┘
 ```
 
@@ -196,7 +127,6 @@ openclaw cron logs openrouter-sync
 
 - [OpenRouter Pricing](https://openrouter.ai/docs#pricing)
 - [OpenRouter Models API](https://openrouter.ai/docs#models)
-- [safe-edit](../safe-edit/) - Used for config updates
 
 ## License
 

@@ -22,13 +22,7 @@ Result: API Key not saved, configuration lost, trust broken
 `safeedit` wraps file operations with multiple safety layers:
 
 ### 1. Pre-validation
-```javascript
-// Check if target text exists before attempting edit
-const exists = await verifyTextExists(file, oldText);
-if (!exists) {
-  // Alert immediately, don't attempt edit
-}
-```
+Checks if target text exists before attempting edit
 
 ### 2. Auto-fallback Chain
 ```
@@ -42,12 +36,19 @@ alert user (never silent)
 ```
 
 ### 3. Post-verification
-```javascript
-// After any write, verify it worked
-const written = await verifyContent(file, expectedContent);
-if (!written) {
-  // Escalate to user
-}
+After any write, verifies the expected outcome
+
+## Installation
+
+```bash
+# Clone the skills repository
+git clone https://github.com/gumi-ink/gumi-skills.git
+
+# Copy skill to your OpenClaw workspace
+cp -r gumi-skills/skills/safe-edit ~/.openclaw/workspace/skills/
+
+# Make executable
+chmod +x ~/.openclaw/workspace/skills/safe-edit/safeedit.sh
 ```
 
 ## Usage
@@ -55,73 +56,26 @@ if (!written) {
 ### Basic
 ```bash
 # Replace traditional edit
-safeedit --file memory/2026-03-11.md \
-         --old "## Todo" \
-         --new "## Todo\n- [ ] New item"
+~/.openclaw/workspace/skills/safe-edit/safeedit.sh \
+  --file memory/2026-03-11.md \
+  --old "## Todo" \
+  --new "## Todo\n- [ ] New item"
 ```
 
-### With Fallback
+### With verbose output
 ```bash
-# If edit fails, automatically appends
-safeedit --file config.json \
-         --old '"model": "old"' \
-         --new '"model": "new"' \
-         --fallback append
-```
-
-### Force Write Mode
-```bash
-# For critical data, use atomic write
-safewrite --file secrets.key \
-          --content "$API_KEY" \
-          --verify
-```
-
-## Configuration
-
-Add to `~/.openclaw/workspace/skills/safe-edit/config.json`:
-
-```json
-{
-  "onFailure": "alert",      // alert | silent | abort
-  "backupDir": "./backups",  // Where to store failed edits
-  "verifyWrites": true,      // Always verify after write
-  "logLevel": "warn"         // debug | info | warn | error
-}
-```
-
-## Integration
-
-### With cron jobs
-```bash
-# In your sync script
-source ~/.openclaw/workspace/skills/safe-edit/safeedit.sh
-
-safeedit --file "$CONFIG" --old "$OLD" --new "$NEW" || {
-  echo "Critical: Config update failed"
-  exit 1
-}
-```
-
-### With agents
-```javascript
-// Agent automatically uses safeedit wrapper
-const result = await safeedit({
-  file: 'memory/today.md',
-  oldText: '## Todo',
-  newText: '## Todo\n- [ ] Task'
-});
-
-if (!result.success) {
-  await alertUser(`Edit failed: ${result.error}`);
-}
+~/.openclaw/workspace/skills/safe-edit/safeedit.sh \
+  --file config.json \
+  --old '"model": "old"' \
+  --new '"model": "new"' \
+  --verbose
 ```
 
 ## How It Works
 
 ```
 ┌─────────────────────────────────────┐
-│  User calls safeedit()              │
+│  User calls safeedit.sh             │
 └─────────────┬───────────────────────┘
               ▼
 ┌─────────────────────────────────────┐
@@ -152,29 +106,12 @@ if (!result.success) {
 └─────────────────────────────────────┘
 ```
 
-## Testing
+## Exit Codes
 
-```bash
-# Test exact match
-./test.sh --scenario exact-match
-
-# Test fallback to append
-./test.sh --scenario fallback-append
-
-# Test backup on total failure
-./test.sh --scenario backup-mode
-
-# Test verification failure
-./test.sh --scenario verify-fail
-```
-
-## Roadmap
-
-- [ ] Auto-fix common whitespace issues
-- [ ] Fuzzy matching for near-misses
-- [ ] Git-style diff preview
-- [ ] Batch edits with transaction support
-- [ ] Webhook alerts on critical failures
+| Code | Meaning |
+|------|---------|
+| 0 | Success (edit or fallback worked) |
+| 1 | Failure (pre-validation failed or all fallbacks failed) |
 
 ## License
 

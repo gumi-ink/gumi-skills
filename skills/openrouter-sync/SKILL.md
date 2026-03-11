@@ -28,37 +28,29 @@ Every day at 06:00:
 3. Compares with current OpenClaw config
 4. Updates config if changes detected
 5. Logs everything for audit
-6. Alerts on significant changes
 
 ## Installation
 
 ```bash
-clawhub install openrouter-sync
-```
+git clone https://github.com/gumi-ink/gumi-skills.git
+cp -r gumi-skills/skills/openrouter-sync ~/.openclaw/workspace/skills/
 
-## Configuration
-
-Set up your OpenRouter API key:
-```bash
 echo "sk-or-v1-xxxxxxxx" > ~/.openclaw/openrouter.key
 chmod 600 ~/.openclaw/openrouter.key
+
+openclaw cron create \
+  --name openrouter-sync \
+  --cron "0 6 * * *" \
+  --description "Sync OpenRouter free models" \
+  --message "Run openrouter-sync" \
+  --agent main
 ```
 
 ## Usage
 
-### Manual sync
 ```bash
 ~/.openclaw/workspace/skills/openrouter-sync/sync.sh
 ```
-
-### Check last sync
-```bash
-tail ~/.openclaw/logs/openrouter-sync.log
-```
-
-## Integration with safe-edit
-
-Uses safe-edit internally to prevent config corruption.
 
 ---
 
