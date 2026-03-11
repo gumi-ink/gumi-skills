@@ -1,6 +1,8 @@
 # safe-edit
 
-Prevent silent edit failures in OpenClaw with automatic fallback strategies.
+> ⚠️ **CRITICAL UPDATE**: The original Bash implementation (`safeedit.sh`) has been **DEPRECATED** due to severe security and reliability issues identified in security audit.
+> 
+> **Use `safeedit.js` (Node.js) instead.**
 
 ## The Problem
 
@@ -8,35 +10,27 @@ OpenClaw's `edit` tool requires exact text matching. When the match fails:
 - Error is logged but easy to miss in logs
 - Important updates are lost silently
 - No automatic recovery mechanism
-- You only discover the failure later (if ever)
-
-## Real-World Impact
-
-```
-[21:27:27] [tools] edit failed: Could not find the exact text in memory/2026-03-11.md
-Result: API Key not saved, configuration lost, trust broken
-```
 
 ## The Solution
 
-`safeedit` wraps file operations with multiple safety layers:
+`safeedit.js` provides safe file editing with:
 
-### 1. Pre-validation
-Checks if target text exists before attempting edit
+1. **Literal string matching** (NOT regex) - avoids injection attacks
+2. **Pre-validation** - verifies target text exists before modifying
+3. **Automatic backup** - creates timestamped backup before any changes
+4. **Post-verification** - confirms changes were applied correctly
+5. **Safe fallback** - restores from backup on write failure
 
-### 2. Auto-fallback Chain
-```
-edit (exact match) 
-  ↓ fail
-append (add to end)
-  ↓ fail  
-write.backup (new file with timestamp)
-  ↓ fail
-alert user (never silent)
-```
+## Why Bash Version Failed (Security Audit Findings)
 
-### 3. Post-verification
-After any write, verifies the expected outcome
+The original `safeedit.sh` was deprecated due to:
+
+| Issue | Impact |
+|-------|--------|
+| **Regex injection** | `sed` treats input as regex, special chars (`*`, `.`, `$`) cause wrong matches |
+| **Separator collision** | `sed` using `\|` fails when text contains `\|\|` |
+| **Multi-line failure** | `sed` can't match across lines, complex code blocks always fail |
+| **Destructive append** | Fallback appends to EOF, corrupts JSON/JS/Python syntax |
 
 ## Installation
 
@@ -47,16 +41,15 @@ git clone https://github.com/gumi-ink/gumi-skills.git
 # Copy skill to your OpenClaw workspace
 cp -r gumi-skills/skills/safe-edit ~/.openclaw/workspace/skills/
 
-# Make executable
-chmod +x ~/.openclaw/workspace/skills/safe-edit/safeedit.sh
+# Make executable (optional, for direct usage)
+chmod +x ~/.openclaw/workspace/skills/safe-edit/safeedit.js
 ```
 
 ## Usage
 
 ### Basic
 ```bash
-# Replace traditional edit
-~/.openclaw/workspace/skills/safe-edit/safeedit.sh \
+node ~/.openclaw/workspace/skills/safe-edit/safeedit.js \
   --file memory/2026-03-11.md \
   --old "## Todo" \
   --new "## Todo\n- [ ] New item"
@@ -64,54 +57,105 @@ chmod +x ~/.openclaw/workspace/skills/safe-edit/safeedit.sh
 
 ### With verbose output
 ```bash
-~/.openclaw/workspace/skills/safe-edit/safeedit.sh \
+node ~/.openclaw/workspace/skills/safe-edit/safeedit.js \
   --file config.json \
   --old '"model": "old"' \
   --new '"model": "new"' \
   --verbose
 ```
 
+### Multi-line replacement (works correctly)
+```bash
+node safeedit.js \
+  --file app.js \
+  --old 'function oldFunc() {
+  return 1;
+}' \
+  --new 'function newFunc() {
+  return 2;
+}'
+```
+
 ## How It Works
 
 ```
 ┌─────────────────────────────────────┐
-│  User calls safeedit.sh             │
+│  1. Read file content               │
 └─────────────┬───────────────────────┘
               ▼
 ┌─────────────────────────────────────┐
-│  1. Read current file content       │
+│  2. Literal string search           │
+│     (NOT regex - safe from injection)│
+│     ├─ Found → Continue             │
+│     └─ Not found → Error + exit     │
 └─────────────┬───────────────────────┘
               ▼
 ┌─────────────────────────────────────┐
-│  2. Verify oldText exists           │
-│     ├─ Yes → Proceed to edit        │
-│     └─ No  → Alert and stop         │
+│  3. Create timestamped backup       │
 └─────────────┬───────────────────────┘
               ▼
 ┌─────────────────────────────────────┐
-│  3. Attempt edit                    │
-│     ├─ Success → Verify write       │
-│     └─ Fail    → Try fallback       │
+│  4. Perform literal replacement     │
+│     content.split(old).join(new)    │
 └─────────────┬───────────────────────┘
               ▼
 ┌─────────────────────────────────────┐
-│  4. Fallback chain                  │
-│     edit → append → write.backup    │
+│  5. Verify replacement happened     │
 └─────────────┬───────────────────────┘
               ▼
 ┌─────────────────────────────────────┐
-│  5. Final verification              │
-│     ├─ Success → Return OK          │
-│     └─ Fail    → Alert user         │
+│  6. Write file                      │
+│     ├─ Success → Done               │
+│     └─ Fail → Restore from backup   │
+└─────────────┬───────────────────────┘
+              ▼
+┌─────────────────────────────────────┐
+│  7. Post-verification               │
+│     Confirm new text in file        │
 └─────────────────────────────────────┘
 ```
+
+## Technical Details
+
+### Literal vs Regex Matching
+
+**❌ Bash/sed (DEPRECATED):**
+```bash
+# DANGEROUS: Treats $OLD as regex
+sed -i "s|$OLD|$NEW|g" file
+# Fails on: OLD='const x = a || b' (contains ||)
+```
+
+**✅ Node.js (CURRENT):**
+```javascript
+// SAFE: Literal string matching
+content.split(oldText).join(newText)
+// Works with: oldText='const x = a || b'
+```
+
+### Multi-line Support
+
+**❌ Bash/sed:** Cannot match across newlines by default
+
+**✅ Node.js:** Full multi-line support via string operations
 
 ## Exit Codes
 
 | Code | Meaning |
 |------|---------|
-| 0 | Success (edit or fallback worked) |
-| 1 | Failure (pre-validation failed or all fallbacks failed) |
+| 0 | Success (edit completed and verified) |
+| 1 | Failure (pre-validation failed, write failed, or verification failed) |
+
+## Security Considerations
+
+- **No regex injection**: Uses literal string matching
+- **No shell injection**: Pure Node.js, no shell subprocesses
+- **Automatic backup**: Always creates backup before modifying
+- **Atomic operations**: Backup → Write → Verify sequence
+
+## Deprecated Files
+
+- `safeedit.sh` - **DEPRECATED**: Do not use. Contains regex injection and multi-line bugs.
 
 ## License
 
@@ -119,4 +163,4 @@ MIT - Use it, improve it, share it.
 
 ---
 
-*Built by Gumi after losing an API Key to a silent edit failure.*
+*Built by Gumi. Security audit and Node.js rewrite prompted by community feedback.*

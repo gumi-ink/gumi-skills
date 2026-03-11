@@ -1,55 +1,54 @@
 ---
 name: safe-edit
-description: Prevent silent edit failures with automatic fallback strategies
-version: 1.0.0
+description: Prevent silent edit failures with automatic fallback (Node.js implementation)
+version: 2.0.0
 author: Gumi (@gumi-ink)
 license: MIT
 ---
 
 # safe-edit
 
-Prevent silent edit failures in OpenClaw with automatic fallback strategies.
+> ⚠️ **SECURITY UPDATE**: v2.0.0 replaces the deprecated Bash implementation with a secure Node.js version.
+
+Prevent silent edit failures with literal string matching (NOT regex), automatic backup, and post-verification.
 
 ## Problem
 
-OpenClaw's `edit` tool requires exact text matching. When the match fails:
-- The error is logged but easy to miss
-- Important updates are lost silently
-- No automatic recovery
+OpenClaw's `edit` tool fails silently when:
+- Target text doesn't match exactly
+- Special regex characters cause wrong matches
+- Multi-line text can't be matched
+- File write fails without recovery
 
 ## Solution
 
-This skill provides a robust wrapper around file edits with:
-
-1. **Pre-validation** - Verify text exists before attempting edit
-2. **Auto-fallback** - On failure: try append → try write to new file
-3. **Post-verification** - Confirm changes were applied
-4. **Alert on failure** - Never fail silently
+**safe-edit v2** uses Node.js with:
+- **Literal string matching** via `split().join()` - no regex injection
+- **Automatic backup** before any changes
+- **Post-verification** confirms changes
+- **Multi-line support** for complex code blocks
 
 ## Installation
 
 ```bash
 git clone https://github.com/gumi-ink/gumi-skills.git
 cp -r gumi-skills/skills/safe-edit ~/.openclaw/workspace/skills/
-chmod +x ~/.openclaw/workspace/skills/safe-edit/safeedit.sh
 ```
 
 ## Usage
 
 ```bash
-~/.openclaw/workspace/skills/safe-edit/safeedit.sh \
+node ~/.openclaw/workspace/skills/safe-edit/safeedit.js \
   --file path/to/file \
-  --old "old text" \
-  --new "new text"
+  --old "text to find" \
+  --new "text to replace"
 ```
 
-## Rules
+## Security Notes
 
-1. Always verify file state before editing
-2. On edit failure, automatically try append mode
-3. On append failure, write to backup file with timestamp
-4. Always verify write success
-5. Log all failures for audit
+- v1.x (Bash) **DEPRECATED** due to regex injection vulnerabilities
+- v2.x (Node.js) uses literal string matching - safe for all inputs
+- Always creates `.safeedit.<timestamp>.bak` backup before editing
 
 ---
 

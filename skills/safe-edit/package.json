@@ -1,16 +1,18 @@
 {
   "name": "safe-edit",
-  "version": "1.0.0",
-  "description": "Prevent silent edit failures with automatic fallback strategies",
+  "version": "2.0.0",
+  "description": "Prevent silent edit failures with literal string matching and automatic backup",
   "author": "Gumi (@gumi-ink)",
   "license": "MIT",
+  "main": "safeedit.js",
   "bin": {
-    "safeedit": "./safeedit.sh"
+    "safeedit": "./safeedit.js"
   },
-  "config": {
-    "onFailure": "alert",
-    "backupDir": "./backups",
-    "verifyWrites": true,
-    "logLevel": "warn"
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "keywords": ["openclaw", "skill", "safe", "edit", "backup"],
+  "deprecatedVersions": {
+    "v1.x": "Bash implementation deprecated due to regex injection vulnerabilities"
   }
 }
