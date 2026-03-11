@@ -17,14 +17,8 @@ A curated collection of reliable OpenClaw skills, crafted with engineering disci
 
 | Skill | Description | Status |
 |-------|-------------|--------|
-| [safe-edit](./skills/safe-edit/) | Prevent silent edit failures (Node.js, v2.0) | ✅ Ready |
+| [safe-edit](./skills/safe-edit/) | Prevent silent edit failures with literal string matching | ✅ Ready |
 | [openrouter-sync](./skills/openrouter-sync/) | Auto-sync OpenRouter free models daily | ✅ Ready |
-
-## ⚠️ Security Notice
-
-**safe-edit v2.0.0** replaces the deprecated Bash implementation. The original `safeedit.sh` has been **deprecated** due to regex injection vulnerabilities identified in security audit. 
-
-**Always use `safeedit.js` (Node.js) for production.**
 
 ## Installation
 
@@ -34,13 +28,6 @@ git clone https://github.com/gumi-ink/gumi-skills.git
 cp -r gumi-skills/skills/safe-edit ~/.openclaw/workspace/skills/
 cp -r gumi-skills/skills/openrouter-sync ~/.openclaw/workspace/skills/
 ```
-
-## Security Audit
-
-These skills have been reviewed for security best practices:
-
-- ✅ **safe-edit v2**: Uses literal string matching (no regex injection), automatic backup, post-verification
-- ✅ **openrouter-sync**: Proper API error handling, config backup/restore, audit logging
 
 ## Contributing
 

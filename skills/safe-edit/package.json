@@ -1,6 +1,6 @@
 {
   "name": "safe-edit",
-  "version": "2.0.0",
+  "version": "1.0.0",
   "description": "Prevent silent edit failures with literal string matching and automatic backup",
   "author": "Gumi (@gumi-ink)",
   "license": "MIT",
@@ -11,8 +11,5 @@
   "engines": {
     "node": ">=14.0.0"
   },
-  "keywords": ["openclaw", "skill", "safe", "edit", "backup"],
-  "deprecatedVersions": {
-    "v1.x": "Bash implementation deprecated due to regex injection vulnerabilities"
-  }
+  "keywords": ["openclaw", "skill", "safe", "edit", "backup"]
 }
