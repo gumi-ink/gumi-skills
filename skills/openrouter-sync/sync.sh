@@ -45,7 +45,8 @@ if [ "$HTTP_CODE" != "200" ]; then
 fi
 
 # Extract free models (pricing.prompt = 0 and pricing.completion = 0)
-FREE_MODELS=$(echo "$BODY" | jq -r '.data[] | select(.pricing.prompt == "0" and .pricing.completion == "0") | .id' 2>/dev/null)
+# Using tonumber to handle both string "0" and number 0, as well as "0.0"
+FREE_MODELS=$(echo "$BODY" | jq -r '.data[] | select((.pricing.prompt | tonumber) == 0 and (.pricing.completion | tonumber) == 0) | .id' 2>/dev/null)
 
 if [ -z "$FREE_MODELS" ]; then
   log "WARNING: No free models found"
